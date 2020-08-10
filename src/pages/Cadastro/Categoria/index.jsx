@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import Page from '../../../components/Page';
 import FormField from '../../../components/FormField';
 import Button from '../../../components/Button';
+import useForm from '../../../hooks/useForm';
+import categoryRepository from '../../../repositories/category';
 
 const CadastroCategoria = () => {
   const valoresIniciais = {
@@ -11,28 +13,20 @@ const CadastroCategoria = () => {
     color: '#000000',
   };
 
+  const { handleChange, values, clearForm } = useForm(valoresIniciais);
   const [category, setCategory] = useState([]);
-  const [values, setValues] = useState(valoresIniciais);
 
   useEffect(() => {
-    const URL_TOP = 'http://localhost:8080/categorias';
-    fetch(URL_TOP).then(async (resp) => {
-      const result = await resp.json();
+    categoryRepository.getAllWithVideos().then((result) => {
       setCategory([...result]);
-    });
+    }).catch((err) => console.log(err.message));
   }, []);
-
-  const handleChange = (field) => {
-    const { value } = field.target;
-    const key = field.target.getAttribute('name');
-
-    setValues({ ...values, [key]: value });
-  };
 
   const handleSubmit = (form) => {
     form.preventDefault();
-    setCategory([...category, values]);
-    setValues(valoresIniciais);
+    const newCat = { title: values.name, id: category.length + 1, color: category.cor };
+    setCategory([...category, newCat]);
+    clearForm();
   };
 
   return (
@@ -75,7 +69,7 @@ const CadastroCategoria = () => {
 
       <ul>
         {category.map((categoria) => (
-          <li key={categoria.id}>
+          <li key={`${categoria.id}_${categoria.name}`}>
             {categoria.title}
           </li>
         ))}
